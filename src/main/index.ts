@@ -44,7 +44,7 @@ import * as gateway from './gateway.ts'
 import * as setting from './setting'
 import * as middleware from './middleware'
 import * as fs from 'node:fs'
-
+import { CancellationToken } from 'electron-updater'
 app.whenReady().then(async () => {
   log.initialize()
   electronApp.setAppUserModelId('com.rwdz')
@@ -107,11 +107,21 @@ app.whenReady().then(async () => {
       return app.getPath(name)
     }
   )
+
+  let cancellationToken: CancellationToken
   ipcMain.handle('app:downloadUpdate', async () => {
-    return autoUpdater.downloadUpdate()
+    cancellationToken = new CancellationToken()
+    return autoUpdater.downloadUpdate(cancellationToken)
   })
   ipcMain.handle('app:quitAndInstall', async () => {
     return autoUpdater.quitAndInstall()
+  })
+  ipcMain.handle('app:downloadCancel', async () => {
+    if (cancellationToken != null) {
+      cancellationToken.cancel()
+      return true
+    }
+    return false
   })
   await createWindow()
 })
@@ -147,9 +157,41 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   })
   // 监听更新下载完成事件
   autoUpdater.on('update-downloaded', (event) => {
-    log.info('更新下载完成，准备安装')
+    log.info('更新下载完成，准备安装', event)
     mainWindow.webContents.send('update-downloaded', event)
-    // 退出应用并安装更新
+    dialog.showMessageBoxSync({
+      title: '提示',
+      type: 'info',
+      buttons: ['确定'],
+      message: '下载完成，即将退出进行安装'
+    })
+    autoUpdater.quitAndInstall()
+  })
+  autoUpdater.on('error', (error, message) => {
+    console.log(error, message)
+  })
+  autoUpdater.on('update-not-available', (info) => {
+    log.info('当前版本为最新版本')
+    mainWindow.webContents.send('update-not-available', info)
+  })
+  autoUpdater.on('update-cancelled', (info) => {
+    console.log('更新取消', info)
   })
   await autoUpdater.checkForUpdatesAndNotify()
+}
+
+console.log = (...args) => {
+  log.log(...args)
+}
+console.error = (...args) => {
+  log.error(...args)
+}
+console.warn = (...args) => {
+  log.warn(...args)
+}
+console.info = (...args) => {
+  log.info(...args)
+}
+console.debug = (...args) => {
+  log.debug(...args)
 }

@@ -9,7 +9,6 @@ export type GatewayOption = {
   prefix: string
 }
 
-
 export type MiddlewareOption = {
   transport: string
   protocol: string
@@ -17,4 +16,3 @@ export type MiddlewareOption = {
   port: number
   rate: number
 }
-

@@ -2,7 +2,6 @@
 import { ref, onMounted, toRaw, onUnmounted } from 'vue'
 import { SearchIcon } from 'tdesign-icons-vue-next'
 import { IotBoxGateway } from '@common/vo'
-import { GatewayOption } from '@common/dto'
 import {
   CustomValidateResolveType,
   CustomValidator,
@@ -12,7 +11,7 @@ import {
 } from 'tdesign-vue-next'
 import * as ip from 'ip'
 import GatewayTagList from '@renderer/views/GatewayTagList.vue'
-const formData = ref<GatewayOption>({
+const formData = ref({
   transport: 'UDP',
   protocol: 'IOT_BOX',
   ip: '127.0.0.1',
@@ -296,7 +295,10 @@ const validateHex = (): void => {
         <t-select
           v-model="formData.protocol"
           placeholder="请选择"
-          :options="[{ label: 'IOT_BOX', value: 'IOT_BOX' }]"
+          :options="[
+            { label: 'IOT_BOX', value: 'IOT_BOX' },
+            { label: '索塔', value: 'SOTOA' }
+          ]"
           size="medium"
         />
       </t-form-item>

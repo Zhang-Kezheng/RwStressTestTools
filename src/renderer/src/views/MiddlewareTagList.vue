@@ -232,17 +232,19 @@ function parseSleepState(state: number): string {
 </script>
 
 <template>
-  <t-table
-    ref="tableRef"
-    style="margin-top: 10px"
-    :height="500"
-    row-key="id"
-    :columns="overviewTableColumns"
-    :data="tagTableData"
-    :scroll="{ type: 'virtual', rowHeight: 69, bufferSize: 10 }"
-    :bordered="true"
-    lazy-load
-  />
+  <div style="height: 500px">
+    <t-table
+      ref="tableRef"
+      style="margin-top: 10px"
+      :max-height="500"
+      row-key="id"
+      :columns="overviewTableColumns"
+      :data="tagTableData"
+      :scroll="{ type: 'virtual', rowHeight: 69, bufferSize: 10 }"
+      :bordered="true"
+      lazy-load
+    />
+  </div>
 </template>
 
 <style scoped></style>

@@ -20,6 +20,7 @@ async function fetchTagList(): Promise<void> {
     return
   }
   tagList.value = await window.electron.ipcRenderer.invoke('gateway:tag_list', prop.mac)
+  console.log(tagList.value)
 }
 onUnmounted(() => {
   clearInterval(timer)

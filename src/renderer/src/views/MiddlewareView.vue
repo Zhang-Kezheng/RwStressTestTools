@@ -2,10 +2,9 @@
 import { inject, onMounted, onUnmounted, reactive, ref, toRaw } from 'vue'
 import { SearchIcon } from 'tdesign-icons-vue-next'
 import { IotBoxGatewayVo, IotBoxMiddlewareGateway } from '@common/vo'
-import { MiddlewareOption } from '@common/dto'
 import MiddlewareTagList from '@renderer/views/MiddlewareTagList.vue'
 import { AppSetting } from '@renderer/main'
-const formData = reactive<MiddlewareOption>({
+const formData = reactive({
   transport: 'UDP',
   protocol: 'IOT_BOX',
   ip: '127.0.0.1',
@@ -270,7 +269,10 @@ const opendir = (): void => {
         <t-select
           v-model="formData.protocol"
           placeholder="请选择"
-          :options="[{ label: 'IOT_BOX', value: 'IOT_BOX' }]"
+          :options="[
+            { label: 'IOT_BOX', value: 'IOT_BOX' },
+            { label: '索塔', value: 'SOTOA' }
+          ]"
           size="medium"
         />
       </t-form-item>

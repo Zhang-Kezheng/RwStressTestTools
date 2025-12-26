@@ -95,6 +95,9 @@ export class IotBoxTagProtocol {
     aoaTag.length = buf.readUint8()
     aoaTag.fix = buf.readUint8()
     aoaTag.manufacturerId = buf.readShort()
+    if (aoaTag.manufacturerId != 0x0d00) {
+      return null
+    }
     aoaTag.packageId = buf.readUint8()
     aoaTag.command = buf.readUint8()
     aoaTag.userData = new Uint8Array(buf.readBytes(3).toArrayBuffer())
@@ -122,8 +125,71 @@ export class IotBoxTagProtocol {
 
 let SN: number = 0
 
-export function writeBytes(buffer: ByteBuffer, bytes: Uint8Array<ArrayBuffer>): void {
-  bytes.forEach((byte) => {
+export function writeBytes(buffer: ByteBuffer, bytes: Uint8Array<ArrayBuffer> | number[]): void {
+  bytes.forEach((byte: number) => {
     buffer.writeByte(byte)
   })
+}
+
+export class SotoaTagProtocol {
+  mac: Uint8Array<ArrayBuffer>
+  length: number
+  fix: number
+  manufacturerId: number
+  privateNum: number
+  event: number
+  type: number
+  data: Uint8Array<ArrayBuffer>
+  constructor(
+    mac: Uint8Array<ArrayBuffer>,
+    length: number,
+    fix: number,
+    manufacturerId: number,
+    privateNum: number,
+    event: number,
+    type: number,
+    data: Uint8Array<ArrayBuffer>
+  ) {
+    this.mac = mac
+    this.length = length
+    this.fix = fix
+    this.manufacturerId = manufacturerId
+    this.privateNum = privateNum
+    this.event = event
+    this.type = type
+    this.data = data
+  }
+  static getInstance(bytes: ArrayBuffer): SotoaTagProtocol | null {
+    if (bytes.byteLength != 38) {
+      console.log('垃圾数据，丢弃')
+      return null
+    }
+    const buf = ByteBuffer.wrap(bytes)
+    const mac = new Uint8Array(buf.readBytes(6).toArrayBuffer())
+    const length = buf.readUint8()
+    const fix = buf.readUint8()
+    const manufacturerId = buf.readShort()
+    if (manufacturerId != 0x0911) {
+      return null
+    }
+    const privateNum = buf.readShort()
+    const event = buf.readUint8()
+    const type = buf.readShort()
+    const data = new Uint8Array(buf.readBytes(length - 8).toArrayBuffer())
+    return new SotoaTagProtocol(mac, length, fix, manufacturerId, privateNum, event, type, data)
+  }
+  toBytes(): Uint8Array<ArrayBuffer> {
+    const buffer = ByteBuffer.allocate(38)
+    writeBytes(buffer, this.mac)
+    buffer.writeUint8(this.length)
+    buffer.writeUint8(this.fix)
+    buffer.writeShort(this.manufacturerId)
+    buffer.writeShort(this.privateNum)
+    buffer.writeUint8(this.event)
+    buffer.writeShort(this.type)
+    writeBytes(buffer, this.data)
+    writeBytes(buffer, [0, 0, 0, 0, 0, 0, 0, 0])
+    buffer.flip()
+    return new Uint8Array(buffer.toArrayBuffer())
+  }
 }

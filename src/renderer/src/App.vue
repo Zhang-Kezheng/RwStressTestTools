@@ -2,14 +2,40 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDark } from '@vueuse/core'
-import { UpdateInfo } from 'electron-updater'
+import { UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 import { ProgressInfo } from 'electron-builder'
 
 const router = useRouter()
 const menuRoutes = ['/Gateway', '/Middleware', '/Setting']
+const app_version = ref('')
+const update_available_dialog_show = ref(false)
+const update_info = ref<UpdateInfo>()
+const update_progress_dialog_show = ref(false)
+const progress_info = ref<ProgressInfo>()
 onMounted(async () => {
   app_version.value = await window.electron.ipcRenderer.invoke('setting:app_version')
   await router.push(menuRoutes[0])
+  window.electron.ipcRenderer.on('update-available', (_event, info: UpdateInfo) => {
+    console.log('update-available', info)
+    update_available_dialog_show.value = true
+    update_info.value = info
+  })
+  window.electron.ipcRenderer.on(
+    'update-downloaded',
+    (_event, update_event: UpdateDownloadedEvent) => {
+      console.log('下载完成', update_event)
+      if (progress_info.value != null) {
+        progress_info.value.percent = 100
+      }
+    }
+  )
+  window.electron.ipcRenderer.on('update-progress', (_event, info: ProgressInfo) => {
+    console.log('下载中', info)
+    progress_info.value = info
+  })
+  window.electron.ipcRenderer.on('update-not-available', (_event, info) => {
+    console.log('当前版本为最新版本', info)
+  })
 })
 useDark({
   onChanged(dark) {
@@ -23,22 +49,14 @@ useDark({
 const onSelected = (index: number): void => {
   router.push(menuRoutes[index])
 }
-const app_version = ref('')
-const update_available_dialog_show = ref(false)
-const update_info = ref<UpdateInfo>()
-window.electron.ipcRenderer.on('update-available', (_event, info: UpdateInfo) => {
-  update_available_dialog_show.value = true
-  update_info.value = info
-})
-window.electron.ipcRenderer.on('update-downloaded', (event) => {
-  alert('下载完成')
-})
-window.electron.ipcRenderer.on('update-progress', (info) => {
-  console.log('下载中', info)
-})
 const update_confirm = async (): Promise<void> => {
+  update_progress_dialog_show.value = true
+  update_available_dialog_show.value = false
   const result = await window.electron.ipcRenderer.invoke('app:downloadUpdate')
-  console.log(result)
+  console.log('app:downloadUpdate', result)
+}
+const downloadCancel = async (): Promise<void> => {
+  await window.electron.ipcRenderer.invoke('app:downloadUpdate')
 }
 </script>
 <template>
@@ -99,11 +117,25 @@ const update_confirm = async (): Promise<void> => {
     v-model:visible="update_available_dialog_show"
     header="检测到新版本，是否更新？"
     mode="modal"
+    cancel-btn="跳过"
     :close-on-overlay-click="false"
     :on-confirm="update_confirm"
   >
+    <div>最新版本：{{ update_info?.version }}</div>
+    <div v-for="releaseNote in update_info?.releaseNotes" :key="releaseNote.toString()">
+      {{ releaseNote }}
+    </div>
+  </t-dialog>
+  <t-dialog
+    v-model:visible="update_progress_dialog_show"
+    header="下载中"
+    mode="modal"
+    :close-on-overlay-click="false"
+    :footer="false"
+    @cancel="downloadCancel"
+  >
     <div>
-      <div>{{ update_info?.releaseNotes }}</div>
+      <t-progress :percentage="progress_info?.percent" />
     </div>
   </t-dialog>
 </template>
