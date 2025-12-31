@@ -145,6 +145,7 @@ const export_tag_list = async (): Promise<void> => {
       export_mode: exportMode.value,
       path: app_setting.exportPath,
       rate: formData.rate,
+      protocol: formData.protocol,
       gateway_mac: tableData.value[overview_index.value]?.mac
     })
     await MessagePlugin.success({

@@ -140,6 +140,7 @@ export class SotoaTagProtocol {
   event: number
   type: number
   data: Uint8Array<ArrayBuffer>
+  rssi: number
   constructor(
     mac: Uint8Array<ArrayBuffer>,
     length: number,
@@ -148,7 +149,8 @@ export class SotoaTagProtocol {
     privateNum: number,
     event: number,
     type: number,
-    data: Uint8Array<ArrayBuffer>
+    data: Uint8Array<ArrayBuffer>,
+    rssi: number
   ) {
     this.mac = mac
     this.length = length
@@ -158,6 +160,7 @@ export class SotoaTagProtocol {
     this.event = event
     this.type = type
     this.data = data
+    this.rssi = rssi
   }
   static getInstance(bytes: ArrayBuffer): SotoaTagProtocol | null {
     if (bytes.byteLength != 38) {
@@ -176,7 +179,18 @@ export class SotoaTagProtocol {
     const event = buf.readUint8()
     const type = buf.readShort()
     const data = new Uint8Array(buf.readBytes(length - 8).toArrayBuffer())
-    return new SotoaTagProtocol(mac, length, fix, manufacturerId, privateNum, event, type, data)
+    const rssi: number = buf.buffer.at(37)!
+    return new SotoaTagProtocol(
+      mac,
+      length,
+      fix,
+      manufacturerId,
+      privateNum,
+      event,
+      type,
+      data,
+      rssi
+    )
   }
   toBytes(): Uint8Array<ArrayBuffer> {
     const buffer = ByteBuffer.allocate(38)
@@ -188,7 +202,7 @@ export class SotoaTagProtocol {
     buffer.writeUint8(this.event)
     buffer.writeShort(this.type)
     writeBytes(buffer, this.data)
-    writeBytes(buffer, [0, 0, 0, 0, 0, 0, 0, 0])
+    writeBytes(buffer, [0, 0, 0, 0, 0, 0, 0, this.rssi])
     buffer.flip()
     return new Uint8Array(buffer.toArrayBuffer())
   }

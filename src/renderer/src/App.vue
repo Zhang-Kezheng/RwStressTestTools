@@ -23,7 +23,7 @@ onMounted(async () => {
   window.electron.ipcRenderer.on(
     'update-downloaded',
     (_event, update_event: UpdateDownloadedEvent) => {
-      console.log('下载完成', update_event)
+      console.log('update-downloaded', update_event)
       if (progress_info.value != null) {
         progress_info.value.percent = 100
       }
@@ -56,7 +56,7 @@ const update_confirm = async (): Promise<void> => {
   console.log('app:downloadUpdate', result)
 }
 const downloadCancel = async (): Promise<void> => {
-  await window.electron.ipcRenderer.invoke('app:downloadUpdate')
+  await window.electron.ipcRenderer.invoke('app:downloadCancel')
 }
 </script>
 <template>
@@ -132,10 +132,10 @@ const downloadCancel = async (): Promise<void> => {
     mode="modal"
     :close-on-overlay-click="false"
     :footer="false"
-    @cancel="downloadCancel"
+    :on-close-btn-click="downloadCancel"
   >
     <div>
-      <t-progress :percentage="progress_info?.percent" />
+      <t-progress :percentage="Number(progress_info?.percent.toFixed(2) ?? '0')" />
     </div>
   </t-dialog>
 </template>

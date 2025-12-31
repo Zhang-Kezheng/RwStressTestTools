@@ -117,6 +117,7 @@ app.whenReady().then(async () => {
     return autoUpdater.quitAndInstall()
   })
   ipcMain.handle('app:downloadCancel', async () => {
+    console.log('app:downloadCancel')
     if (cancellationToken != null) {
       cancellationToken.cancel()
       return true
@@ -177,7 +178,6 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.on('update-cancelled', (info) => {
     console.log('更新取消', info)
   })
-  await autoUpdater.checkForUpdatesAndNotify()
 }
 
 console.log = (...args) => {

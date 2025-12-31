@@ -4,7 +4,7 @@ import { IotBoxTagVo, parseMac, SotoaTagVo, transform } from '../common/vo.ts'
 import ByteBuffer from 'bytebuffer'
 
 function process(
-  procotol: 'SOTOA' | 'IOT_BOX',
+  protocol: 'SOTOA' | 'IOT_BOX',
   message: NonSharedBuffer
 ): [string, Array<IotBoxTagVo | SotoaTagVo>, Map<string, IotBoxTagVo | SotoaTagVo>] | undefined {
   const iotBoxGatewayProtocol = IotBoxGatewayProtocol.new(message.buffer)
@@ -19,7 +19,7 @@ function process(
   if (iotBoxGatewayProtocol.data.length == count * 38 + 1) {
     for (let i = 0; i < count; i++) {
       let tag: IotBoxTagProtocol | SotoaTagProtocol | null
-      if (procotol == 'IOT_BOX') {
+      if (protocol == 'IOT_BOX') {
         tag = IotBoxTagProtocol.getInstance(data_buffer.readBytes(38).toArrayBuffer())
       } else {
         tag = SotoaTagProtocol.getInstance(data_buffer.readBytes(38).toArrayBuffer())

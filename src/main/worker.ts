@@ -100,7 +100,7 @@ function buildIotBoxTagPacket(
         1, //硬件版本号
         getRandomInt(0, 100), //电量百分比（0-100）
         getRandomInt(100, 230), //体温测量值
-        getRandomInt(0, 1), //设备状态
+        getRandomInt(0, 255), //设备状态
         getRandomInt(0, 255), //心率
         getRandomInt(0, 255), //血压
         getRandomInt(0, 255), //血压
@@ -112,7 +112,17 @@ function buildIotBoxTagPacket(
         getRandomInt(0, 255), //睡眠
         sn++
       ])
-      return new SotoaTagProtocol(mac, data.length + 8, 0xff, 0x0911, 0x1000, event, type, data)
+      return new SotoaTagProtocol(
+        mac,
+        data.length + 8,
+        0xff,
+        0x0911,
+        0x1000,
+        event,
+        type,
+        data,
+        getRandomInt(0, 255)
+      )
     }
   }
 }

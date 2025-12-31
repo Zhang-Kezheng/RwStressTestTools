@@ -17,27 +17,11 @@
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
+    "build:win-arm": "npm run build && electron-builder --win --arm64",
     "build:mac": "npm run build && electron-builder --mac",
     "build:mac-arm": "npm run build && electron-builder --mac --arm64",
-    "build:linux": "npm run build && electron-builder --linux"
-  },
-  "dependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0",
-    "@types/ip-address": "^6.0.0",
-    "@vitejs/plugin-vue-jsx": "^5.1.1",
-    "@vueuse/core": "^14.1.0",
-    "bytebuffer": "^5.0.1",
-    "dgram": "^1.0.1",
-    "electron-log": "^5.4.3",
-    "electron-updater": "^6.3.9",
-    "ip": "^2.0.1",
-    "ip-address": "^10.1.0",
-    "sqlite3": "^5.1.7",
-    "tdesign-icons-vue-next": "^0.4.1",
-    "tdesign-vue-next": "^1.17.6",
-    "vue-router": "^4.6.3",
-    "workerpool": "^10.0.1"
+    "build:linux": "npm run build && electron-builder --linux",
+    "build:all": "npm run build && electron-builder --mac --win --linux"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
@@ -45,6 +29,7 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@types/bytebuffer": "^5.0.49",
     "@types/ip": "^1.1.3",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
     "@types/long": "^4.0.2",
     "@types/node": "^22.18.6",
     "@vitejs/plugin-vue": "^6.0.1",

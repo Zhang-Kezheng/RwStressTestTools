@@ -11,12 +11,15 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+electronLanguages:
+  - zh-CN
 win:
   executableName: rwstresstesttools
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
+  oneClick: false
   createDesktopShortcut: always
 mac:
   entitlementsInherit: build/entitlements.mac.plist

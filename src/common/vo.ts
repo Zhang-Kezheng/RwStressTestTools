@@ -122,9 +122,12 @@ export function transform(
     const mac = parseMac(tag_protocol.mac)
     const firmware = bytebuffer.readByte()
     const hardware = bytebuffer.readByte()
-    const battery_level = bytebuffer.readByte()
+    const voltage = bytebuffer.readByte()
     const body_temperature = bytebuffer.readByte()
     const status = bytebuffer.readByte()
+    const tamper = ((status >> 5) & 0x01) == 1
+    const button = ((status >> 4) & 0x01) == 1
+    const shock = ((status >> 3) & 0x01) == 1
     const raw = toHexString(tag_protocol.toBytes())
     if (tag_protocol.type == 0x00) {
       bytebuffer.skip(6)
@@ -133,10 +136,13 @@ export function transform(
         mac,
         firmware,
         hardware,
-        battery_level,
+        voltage,
         body_temperature,
-        status == 0x00,
+        tamper,
+        button,
+        shock,
         sn,
+        tag_protocol.rssi,
         raw
       )
     } else {
@@ -146,17 +152,20 @@ export function transform(
       const blood_oxygen = bytebuffer.readUint8()
       const step_count = bytebuffer.readUint16()
       const sleep_state = bytebuffer.readByte()
-      const deep_sleep_time = bytebuffer.readByte()
-      const light_sleep_time = bytebuffer.readByte()
+      const deep_sleep_time = bytebuffer.readUint8()
+      const light_sleep_time = bytebuffer.readUint8()
       const sn = bytebuffer.readByte()
       const tag = new SotoaTagVo(
         mac,
         firmware,
         hardware,
-        battery_level,
+        voltage,
         body_temperature,
-        status == 0x00,
+        tamper,
+        button,
+        shock,
         sn,
+        tag_protocol.rssi,
         raw
       )
       tag.heart_rate = heart_rate
@@ -175,9 +184,11 @@ export class SotoaTagVo {
   mac: string
   firmware: number
   hardware: number
-  battery_level: number
+  voltage: number
   body_temperature: number
   tamper: boolean
+  button: boolean
+  shock: boolean
   heart_rate?: number
   blood_pressure_h?: number
   blood_pressure_l?: number
@@ -186,6 +197,7 @@ export class SotoaTagVo {
   sleep_state?: number
   deep_sleep_time?: number
   light_sleep_time?: number
+  rssi: number
   sn: number
   last_time: number = Date.now()
   first_time?: number
@@ -195,19 +207,25 @@ export class SotoaTagVo {
     mac: string,
     firmware: number,
     hardware: number,
-    battery_level: number,
+    voltage: number,
     body_temperature: number,
     tamper: boolean,
+    button: boolean,
+    shock: boolean,
     sn: number,
+    rssi: number,
     raw_data: string
   ) {
     this.mac = mac
     this.firmware = firmware
     this.hardware = hardware
-    this.battery_level = battery_level
+    this.voltage = voltage
     this.body_temperature = body_temperature
     this.tamper = tamper
+    this.button = button
+    this.shock = shock
     this.sn = sn
+    this.rssi = rssi
     this.raw_data = raw_data
   }
 }

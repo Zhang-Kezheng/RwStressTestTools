@@ -143,7 +143,7 @@ export async function stop(): Promise<boolean> {
 import os from 'os'
 import { Server, TcpServer, UdpServer } from './server.ts'
 import { app } from 'electron'
-import { IotBoxTagProtocol } from '../common/protocol.ts'
+import { IotBoxTagProtocol, SotoaTagProtocol } from '../common/protocol.ts'
 export async function export_tag_list(
   _event: IpcMainInvokeEvent,
   option: {
@@ -152,6 +152,7 @@ export async function export_tag_list(
     export_mode: number
     path: string
     rate: number
+    protocol: 'SOTOA' | 'IOT_BOX'
   }
 ): Promise<boolean> {
   console.log(option)
@@ -165,7 +166,7 @@ export async function export_tag_list(
     //合并导出
     fs.appendFileSync(
       path.join(option.path, `${mac}.csv`),
-      `Mac,电压,防拆,按钮,振动,心率,舒张压,收缩压,血氧,体温,计步,睡眠状态,深睡眠时间,浅睡眠时间,rssi,第一次上报时间,最后更新时间,丢包率${os.EOL}`
+      `Mac,电压/电量,防拆,按钮,振动,心率,舒张压,收缩压,血氧,体温,计步,睡眠状态,深睡眠时间,浅睡眠时间,rssi,第一次上报时间,最后更新时间,丢包率${os.EOL}`
     )
     gateway.tag_list
       .filter((item) => {
@@ -174,7 +175,7 @@ export async function export_tag_list(
       .forEach((value) => {
         fs.appendFileSync(
           path.join(option.path, `${mac}.csv`),
-          parseIotBoxTagVo(value) +
+          parseTagVo(value) +
             `${timestampToTime(value.first_time)},${timestampToTime(value.last_time)},${diubaolv(value, option.rate, runtime)}% ${os.EOL}`
         )
       })
@@ -182,14 +183,19 @@ export async function export_tag_list(
     //不合并导出
     fs.appendFileSync(
       path.join(option.path, `${mac}.csv`),
-      `Mac,电压,防拆,按钮,振动,心率,舒张压,收缩压,血氧,体温,计步,睡眠状态,深睡眠时间,浅睡眠时间,rssi,更新时间,原始数据${os.EOL}`
+      `Mac,电压/电量,防拆,按钮,振动,心率,舒张压,收缩压,血氧,体温,计步,睡眠状态,深睡眠时间,浅睡眠时间,rssi,更新时间,原始数据${os.EOL}`
     )
     const data = fs
       .readFileSync(path.join(app.getPath('userData'), 'cache', `${mac}.cache`))
       .toString()
     const list: Array<IotBoxTagVo | SotoaTagVo> = []
     data.split(`${os.EOL}`).forEach((item) => {
-      const protocol = IotBoxTagProtocol.getInstance(hexStringToByteArray(item).buffer)
+      if (item == '') return
+      const data = hexStringToByteArray(item)
+      const protocol =
+        option.protocol == 'IOT_BOX'
+          ? IotBoxTagProtocol.getInstance(data.buffer)
+          : SotoaTagProtocol.getInstance(data.buffer)
       if (protocol != null) {
         const vo = transform(protocol)
         list.push(vo)
@@ -202,7 +208,7 @@ export async function export_tag_list(
       .forEach((value) => {
         fs.appendFileSync(
           path.join(option.path, `${mac}.csv`),
-          parseIotBoxTagVo(value) + `${timestampToTime(value.last_time)},${value.raw_data}${os.EOL}`
+          parseTagVo(value) + `${timestampToTime(value.last_time)},${value.raw_data}${os.EOL}`
         )
       })
   }
@@ -235,7 +241,7 @@ function timestampToTime(timestamp: number | undefined): string {
     date.getMilliseconds() < 100 ? '0' + date.getMilliseconds() : date.getMilliseconds()
   return Y + M + D + h + m + s + milliseconds
 }
-function parseIotBoxTagVo(tag: IotBoxTagVo): string {
+function parseTagVo(tag: IotBoxTagVo | SotoaTagVo): string {
   return `${tag.mac},${tag.voltage ?? ''},${tag.tamper ?? ''},${tag.button ?? ''},${tag.shock ?? ''},${tag.heart_rate ?? ''},${tag.blood_pressure_l ?? ''},${tag.blood_pressure_h ?? ''},${tag.blood_oxygen ?? ''},${tag.body_temperature ?? ''},${tag.step_count ?? ''},${tag.sleep_state ?? ''},${tag.deep_sleep_time ?? ''},${tag.light_sleep_time ?? ''},${tag.rssi ?? ''},`
 }
 const diubaolv = (row: IotBoxTagVo, rate: number, runtime: number): string => {

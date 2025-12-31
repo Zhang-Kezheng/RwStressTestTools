@@ -63,9 +63,9 @@ const overviewTableColumns = [
   },
   {
     colKey: 'voltage',
-    title: '电压',
+    title: '电压/电量',
     align: 'center',
-    width: '70'
+    width: '100'
   },
   {
     colKey: 'tamper',
