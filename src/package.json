@@ -8,12 +8,14 @@
     "bytebuffer": "^5.0.1",
     "dgram": "^1.0.1",
     "electron-log": "^5.4.3",
+    "electron-squirrel-startup": "^1.0.1",
     "electron-updater": "^6.3.9",
     "ip": "^2.0.1",
     "ip-address": "^10.1.0",
     "sqlite3": "^5.1.7",
     "tdesign-icons-vue-next": "^0.4.1",
     "tdesign-vue-next": "^1.17.6",
+    "update-electron-app": "^3.1.2",
     "vue-router": "^4.6.3",
     "workerpool": "^10.0.1"
   }

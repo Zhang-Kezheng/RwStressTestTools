@@ -2,8 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDark } from '@vueuse/core'
-import { UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
-import { ProgressInfo } from 'electron-builder'
+import { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 
 const router = useRouter()
 const menuRoutes = ['/Gateway', '/Middleware', '/Setting']
