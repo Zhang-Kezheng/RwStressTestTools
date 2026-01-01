@@ -149,8 +149,7 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.autoDownload = false
   autoUpdater.setFeedURL({
     provider: 'generic',
-    url: 'http://47.116.120.4:8000/',
-    channel: 'v1.0.0'
+    url: 'http://47.116.120.4:8000/'
   })
   // 自动检查更新并通知用户
   // 监听更新可用事件
