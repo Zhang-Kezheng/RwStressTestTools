@@ -136,10 +136,10 @@ app.on('window-all-closed', () => {
   }
 })
 app.on('before-quit', () => {
-  fs.readdirSync(path.join(app.getPath('userData'), 'cache')).forEach((value) => {
+  fs.readdirSync(path.join(app.getPath('userData'), 'Cache')).forEach((value) => {
     const ext = path.extname(value)
     if (ext == '.cache') {
-      fs.unlinkSync(path.join(path.join(app.getPath('userData'), 'cache', value)))
+      fs.unlinkSync(path.join(path.join(app.getPath('userData'), 'Cache', value)))
     }
   })
 })

@@ -38,12 +38,14 @@ export async function start(
   option: MiddlewareOption
 ): Promise<boolean> {
   console.log('middleware:start', option)
-  fs.readdirSync(path.join(app.getPath('userData'), 'cache')).forEach((value) => {
-    const ext = path.extname(value)
-    if (ext == '.cache') {
-      fs.unlinkSync(path.join(path.join(app.getPath('userData'), 'cache', value)))
-    }
-  })
+  if (fs.existsSync(path.join(app.getPath('userData'), 'Cache'))) {
+    fs.readdirSync(path.join(app.getPath('userData'), 'Cache')).forEach((value) => {
+      const ext = path.extname(value)
+      if (ext == '.cache') {
+        fs.unlinkSync(path.join(path.join(app.getPath('userData'), 'Cache', value)))
+      }
+    })
+  }
   server =
     option.transport == 'UDP'
       ? new UdpServer(option.ip, option.port)
@@ -62,7 +64,7 @@ export async function start(
           data = data + item.raw_data + `${os.EOL}`
         })
         fs.appendFileSync(
-          path.join(app.getPath('userData'), 'cache', `${key.replaceAll(':', '-')}.cache`),
+          path.join(app.getPath('userData'), 'Cache', `${key.replaceAll(':', '-')}.cache`),
           data
         )
       })
@@ -186,7 +188,7 @@ export async function export_tag_list(
       `Mac,电压/电量,防拆,按钮,振动,心率,舒张压,收缩压,血氧,体温,计步,睡眠状态,深睡眠时间,浅睡眠时间,rssi,更新时间,原始数据${os.EOL}`
     )
     const data = fs
-      .readFileSync(path.join(app.getPath('userData'), 'cache', `${mac}.cache`))
+      .readFileSync(path.join(app.getPath('userData'), 'Cache', `${mac}.cache`))
       .toString()
     const list: Array<IotBoxTagVo | SotoaTagVo> = []
     data.split(`${os.EOL}`).forEach((item) => {
