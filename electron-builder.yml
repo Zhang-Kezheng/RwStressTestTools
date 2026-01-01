@@ -13,10 +13,10 @@ asarUnpack:
   - resources/**
 electronLanguages:
   - zh-CN
+artifactName: ${productName}-${arch}-${version}.${ext}
 win:
   executableName: rwstresstesttools
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   oneClick: false
@@ -30,11 +30,9 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${arch}-${version}.${ext}
 linux:
   target:
-    - AppImage
-    - snap
     - deb
   maintainer: electronjs.org
   category: Utility
@@ -42,7 +40,8 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: http://47.116.120.4:8000/dist
+  - provider: generic
+    url: http://47.116.120.4:8000/
+    publishAutoUpdate: true
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

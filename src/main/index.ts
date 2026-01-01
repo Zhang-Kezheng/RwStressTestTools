@@ -2,19 +2,12 @@ import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeTheme, shell
 import path, { join } from 'path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
 import log from 'electron-log/main'
 import * as gateway from './gateway.ts'
 import * as setting from './setting'
 import * as middleware from './middleware'
 import * as fs from 'node:fs'
 import { autoUpdater, CancellationToken } from 'electron-updater'
-
-Object.defineProperty(app, 'isPackaged', {
-  get() {
-    return true
-  }
-})
 async function createWindow(): Promise<BrowserWindow> {
   const mainWindow = new BrowserWindow({
     width: 1500,
@@ -48,12 +41,7 @@ async function createWindow(): Promise<BrowserWindow> {
   } else {
     await mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  updateElectronApp({
-    updateSource: {
-      type: UpdateSourceType.StaticStorage,
-      baseUrl: `https://47.116.120.4:8000/update/${process.platform}/${process.arch}`
-    }
-  })
+
   await setupAutoUpdater(mainWindow)
   return mainWindow
 }
@@ -159,12 +147,11 @@ app.on('before-quit', () => {
 async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.forceDevUpdateConfig = true
   autoUpdater.autoDownload = false
-  const server = 'http://47.116.120.4:8000'
-  // e.g. for Windows and app version 1.2.3
-  // https://your-deployment-url.com/update/win32/1.2.3
-  const url = `${server}/update/${process.platform}/${app.getVersion()}`
-  console.log(url)
-  autoUpdater.setFeedURL(url)
+  autoUpdater.setFeedURL({
+    provider: 'generic',
+    url: 'http://47.116.120.4:8000/',
+    channel: 'v1.0.0'
+  })
   // 自动检查更新并通知用户
   // 监听更新可用事件
   autoUpdater.on('update-available', (info) => {
@@ -196,6 +183,7 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.on('update-cancelled', (info) => {
     console.log('更新取消', info)
   })
+  autoUpdater.checkForUpdates()
 }
 
 console.log = (...args) => {

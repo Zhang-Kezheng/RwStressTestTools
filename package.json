@@ -3,51 +3,37 @@
   "version": "1.0.0",
   "description": "仁微压力测试工具",
   "main": "./out/main/index.js",
-  "author": "章可政",
+  "author": "仁微电子",
   "homepage": "https://electron-vite.org",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Zhang-Kezheng/RwStressTestTools"
-  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "start": "electron-forge start",
+    "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win",
+    "build:win": "npm run build && electron-builder --win ",
     "build:win-arm": "npm run build && electron-builder --win --arm64",
     "build:mac": "npm run build && electron-builder --mac",
     "build:mac-arm": "npm run build && electron-builder --mac --arm64",
-    "build:linux": "npm run build && electron-builder --linux",
-    "build:all": "npm run build && electron-builder --mac --win --linux",
-    "package": "electron-forge package",
-    "make": "npm run build && electron-forge make"
+    "build:linux": "npm run build && electron-builder --linux"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^7.10.2",
-    "@electron-forge/maker-deb": "^7.10.2",
-    "@electron-forge/maker-rpm": "^7.10.2",
-    "@electron-forge/maker-squirrel": "^7.10.2",
-    "@electron-forge/maker-zip": "^7.10.2",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
-    "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "@electron/fuses": "^1.8.0",
     "@types/bytebuffer": "^5.0.49",
     "@types/ip": "^1.1.3",
+    "@vitejs/plugin-vue-jsx": "^5.1.1",
     "@types/long": "^4.0.2",
     "@types/node": "^22.18.6",
     "@vitejs/plugin-vue": "^6.0.1",
-    "@vitejs/plugin-vue-jsx": "^5.1.1",
     "electron": "^38.1.2",
+    "electron-builder": "^25.1.8",
     "electron-vite": "^4.0.1",
     "eslint": "^9.36.0",
     "eslint-plugin-vue": "^10.4.0",
@@ -59,8 +45,6 @@
     "vue": "^3.5.21",
     "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.0.7"
-  },
-  "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
   }
 }
+

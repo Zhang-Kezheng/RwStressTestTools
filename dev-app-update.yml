@@ -1,3 +1,2 @@
 provider: generic
-url: " http://47.116.120.4:8000/dist"
-updaterCacheDirName: rwstresstesttools-updater
+url: http://47.116.120.4:8000/
