@@ -147,10 +147,6 @@ app.on('before-quit', () => {
 async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.forceDevUpdateConfig = true
   autoUpdater.autoDownload = false
-  autoUpdater.setFeedURL({
-    provider: 'generic',
-    url: 'http://47.116.120.4:8000/'
-  })
   // 自动检查更新并通知用户
   // 监听更新可用事件
   autoUpdater.on('update-available', (info) => {
