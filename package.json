@@ -1,6 +1,6 @@
 {
   "name": "rwstresstesttools",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "仁微压力测试工具",
   "main": "./out/main/index.js",
   "author": "仁微电子",

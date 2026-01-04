@@ -1,5 +1,5 @@
 appId: com.rwdz.rwstresstesttools
-productName: rwstresstesttools
+productName: 仁微压力测试工具
 directories:
   buildResources: build
 files:
@@ -15,14 +15,17 @@ electronLanguages:
   - zh-CN
 artifactName: ${productName}-${arch}-${version}.${ext}
 win:
+  artifactName: ${productName}-${arch}-${version}-setup.${ext}
   executableName: rwstresstesttools
+  target:
+    - nsis
 nsis:
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   oneClick: false
   perMachine: true
-  allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
+  allowToChangeInstallationDirectory: true
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
@@ -44,6 +47,5 @@ npmRebuild: false
 publish:
   - provider: generic
     url:  http://47.116.120.4:8000/
-    publishAutoUpdate: true
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

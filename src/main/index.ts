@@ -166,7 +166,7 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
       buttons: ['确定'],
       message: '下载完成，即将退出进行安装'
     })
-    autoUpdater.quitAndInstall()
+    autoUpdater.quitAndInstall(true, true)
   })
   autoUpdater.on('error', (error, message) => {
     console.log(error, message)
@@ -178,7 +178,6 @@ async function setupAutoUpdater(mainWindow: BrowserWindow): Promise<void> {
   autoUpdater.on('update-cancelled', (info) => {
     console.log('更新取消', info)
   })
-  autoUpdater.checkForUpdates()
 }
 
 console.log = (...args) => {
