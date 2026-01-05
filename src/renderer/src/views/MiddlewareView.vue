@@ -136,7 +136,14 @@ const app_setting = inject<AppSetting>('appSetting')!
 const exportModeShow = ref(false)
 const exportMode = ref('0')
 const exporting = ref(false)
-import { FormInstanceFunctions, FormProps, MessagePlugin } from 'tdesign-vue-next'
+import {
+  CustomValidateResolveType,
+  CustomValidator,
+  FormInstanceFunctions,
+  FormProps,
+  MessagePlugin,
+  ValueType
+} from 'tdesign-vue-next'
 const export_tag_list = async (): Promise<void> => {
   try {
     exporting.value = true
@@ -170,6 +177,17 @@ const export_tag_list = async (): Promise<void> => {
     exporting.value = false
   }
 }
+const numberValidator: CustomValidator = (val: ValueType): CustomValidateResolveType => {
+  if ((val as number) > 0) {
+    return true
+  } else {
+    return {
+      result: false,
+      message: '大于0',
+      type: 'error'
+    }
+  }
+}
 const rules: FormProps['rules'] = {
   port: [
     {
@@ -194,11 +212,7 @@ const rules: FormProps['rules'] = {
       message: '发包频率必填',
       type: 'error'
     },
-    {
-      min: 1,
-      message: '最小值为1',
-      type: 'error'
-    }
+    { validator: numberValidator }
   ]
 }
 const form = ref<FormInstanceFunctions>()
@@ -250,7 +264,7 @@ const opendir = (): void => {
   <t-dialog
     v-model:visible="settingShow"
     header="基本设置"
-    width="50%"
+    width="35%"
     :confirm-on-enter="true"
     @confirm="onSubmit"
   >
@@ -262,17 +276,6 @@ const opendir = (): void => {
           :options="[
             { label: 'UDP', value: 'UDP' },
             { label: 'TCP', value: 'TCP' }
-          ]"
-          size="medium"
-        />
-      </t-form-item>
-      <t-form-item label="协议类型" name="name" label-align="top">
-        <t-select
-          v-model="formData.protocol"
-          placeholder="请选择"
-          :options="[
-            { label: 'IOT_BOX', value: 'IOT_BOX' },
-            { label: '索塔', value: 'SOTOA' }
           ]"
           size="medium"
         />

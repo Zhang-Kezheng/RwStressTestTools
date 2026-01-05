@@ -1,15 +1,16 @@
-import { workerData, parentPort } from 'worker_threads'
+import { parentPort, workerData } from 'worker_threads'
 import ByteBuffer from 'bytebuffer'
 import {
-  IotBoxTagProtocol,
   IotBoxGatewayProtocol,
-  writeBytes,
-  SotoaTagProtocol
+  IotBoxTagProtocol,
+  SotoaTagProtocol,
+  TagProtocol,
+  writeBytes
 } from '../common/protocol.ts'
 import { IotBoxGatewayVo, transform } from '../common/vo'
 import { Client, TcpClient, UdpClient } from './client.ts'
 
-let tagList = new Array<IotBoxTagProtocol | SotoaTagProtocol>()
+let tagList = new Array<TagProtocol>()
 const client: Client =
   workerData.transport == 'UDP'
     ? new UdpClient(workerData.ip, workerData.port)
@@ -36,7 +37,7 @@ for (let j = 0; j < workerData.tag_count; j++) {
         tagList
       )
       client.send(gateway.toBytes(), () => {
-        const iotBoxTagVoList = tagList.map((value: IotBoxTagProtocol | SotoaTagProtocol) => {
+        const iotBoxTagVoList = tagList.map((value: TagProtocol) => {
           return transform(value)
         })
         parentPort?.postMessage(
@@ -55,7 +56,7 @@ function parseMac(dev_id: Uint8Array<ArrayBuffer>): string {
 
 function buildIotBoxGatewayPacket(
   mac: Uint8Array<ArrayBuffer>,
-  tags: Array<IotBoxTagProtocol | SotoaTagProtocol>
+  tags: Array<TagProtocol>
 ): IotBoxGatewayProtocol {
   const buffer = ByteBuffer.allocate()
   buffer.writeByte(tags.length)
@@ -69,14 +70,10 @@ let sn = 0
 function buildIotBoxTagPacket(
   protocol: 'IOT_BOX' | 'SOTOA',
   mac: Uint8Array<ArrayBuffer>
-): SotoaTagProtocol | IotBoxTagProtocol {
+): TagProtocol {
   switch (protocol) {
     case 'IOT_BOX': {
       const tag = new IotBoxTagProtocol()
-      tag.mac = mac
-      tag.length = 0x1e
-      tag.fix = 0xff
-      tag.manufacturerId = 0x0d00
       tag.packageId = 0x04
       tag.command = getRandomInt(0x09, 0x0f)
       tag.userData = new Uint8Array([
@@ -89,8 +86,7 @@ function buildIotBoxTagPacket(
         0x2f, 0x61, 0xac, 0xcc, 0x27, 0x45, 0x67, 0xf7, 0xdb, 0x34, 0xc4, 0x03, 0x8e, 0x5c, 0x0b,
         0xaa, 0x97, 0x30, 0x56, 0xe6
       ])
-      tag.rssi = getRandomInt(0, 255)
-      return tag
+      return new TagProtocol(mac, 0x1e, 0xff, 0x0d00, tag, getRandomInt(0, 255))
     }
     case 'SOTOA': {
       const event = 0x01
@@ -112,17 +108,8 @@ function buildIotBoxTagPacket(
         getRandomInt(0, 255), //睡眠
         sn++
       ])
-      return new SotoaTagProtocol(
-        mac,
-        data.length + 8,
-        0xff,
-        0x0911,
-        0x1000,
-        event,
-        type,
-        data,
-        getRandomInt(0, 255)
-      )
+      const tag = new SotoaTagProtocol(0x1000, event, type, data)
+      return new TagProtocol(mac, data.length + 8, 0xff, 0x0911, tag, getRandomInt(0, 255))
     }
   }
 }

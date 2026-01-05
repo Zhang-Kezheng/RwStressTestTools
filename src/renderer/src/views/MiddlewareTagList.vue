@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { IotBoxTagVo } from '@common/vo'
+import { TagVo } from '@common/vo'
 const prop = defineProps({
   mac: {
     type: String
@@ -33,7 +33,7 @@ async function fetchTagList(): Promise<void> {
   if (prop.mac === undefined) {
     return
   }
-  const result: IotBoxTagVo[] = await window.electron.ipcRenderer.invoke(
+  const result: TagVo[] = await window.electron.ipcRenderer.invoke(
     'middleware:tag_list',
     prop.mac
   )
@@ -44,7 +44,7 @@ async function fetchTagList(): Promise<void> {
 onUnmounted(() => {
   clearInterval(timer)
 })
-const diubaolv = (row: IotBoxTagVo): string => {
+const diubaolv = (row: TagVo): string => {
   const yingshou = (prop.runtime * prop.rate) / 1000
   if (yingshou === 0) {
     return '0'
@@ -200,7 +200,7 @@ function timestampToTime(timestamp: number): string {
   let s = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()
   return Y + M + D + h + m + s
 }
-const tagTableData = ref<IotBoxTagVo[]>([])
+const tagTableData = ref<TagVo[]>([])
 const parseBoolean = (value: boolean | undefined): string => {
   if (value == undefined) {
     return ''

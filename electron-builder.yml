@@ -34,18 +34,14 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
-dmg:
-  artifactName: ${name}-${arch}-${version}.${ext}
 linux:
   target:
     - deb
   maintainer: electronjs.org
   category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
   - provider: generic
-    url:  http://47.116.120.4:8000/
+    url:  http://47.116.120.4:8000/${platform}/${arch}/
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

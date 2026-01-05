@@ -1,5 +1,5 @@
 import { Worker } from 'worker_threads'
-import { IotBoxGateway, IotBoxGatewayVo, IotBoxTagVo, SotoaTagVo } from '../common/vo'
+import { IotBoxGateway, IotBoxGatewayVo, TagVo } from '../common/vo'
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent
 import path from 'path'
 import { GatewayOption } from '../common/dto.ts'
@@ -83,7 +83,7 @@ export async function list(): Promise<IotBoxGateway[]> {
 export async function tag_list(
   _event: IpcMainInvokeEvent,
   mac: string
-): Promise<Array<IotBoxTagVo | SotoaTagVo> | undefined> {
+): Promise<Array<TagVo> | undefined> {
   return gatewayMap.get(mac)?.tags
 }
 

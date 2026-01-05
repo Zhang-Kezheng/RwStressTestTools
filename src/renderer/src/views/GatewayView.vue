@@ -150,6 +150,17 @@ const ipValidator: CustomValidator = (val: ValueType): CustomValidateResolveType
     }
   }
 }
+const numberValidator: CustomValidator = (val: ValueType): CustomValidateResolveType => {
+  if ((val as number) > 0) {
+    return true
+  } else {
+    return {
+      result: false,
+      message: '大于0',
+      type: 'error'
+    }
+  }
+}
 
 const rules: FormProps['rules'] = {
   ip: [
@@ -184,16 +195,12 @@ const rules: FormProps['rules'] = {
       message: '发包频率必填',
       type: 'error'
     },
-    {
-      min: 1,
-      message: '最小值为1',
-      type: 'error'
-    }
+    { validator: numberValidator }
   ],
   gateway_count: [
     {
       required: true,
-      message: '发包频率必填',
+      message: '网关数必填',
       type: 'error'
     },
     {
@@ -205,7 +212,7 @@ const rules: FormProps['rules'] = {
   tag_count: [
     {
       required: true,
-      message: '发包频率必填',
+      message: '标签数必填',
       type: 'error'
     },
     {

@@ -1,12 +1,15 @@
 import workerpool from 'workerpool'
-import { IotBoxGatewayProtocol, IotBoxTagProtocol, SotoaTagProtocol } from '../common/protocol.ts'
-import { IotBoxTagVo, parseMac, SotoaTagVo, transform } from '../common/vo.ts'
+import {
+  IotBoxGatewayProtocol,
+  TagProtocol
+} from '../common/protocol.ts'
+import { parseMac, TagVo, transform } from '../common/vo.ts'
 import ByteBuffer from 'bytebuffer'
 
 function process(
-  protocol: 'SOTOA' | 'IOT_BOX',
+  _protocol: 'SOTOA' | 'IOT_BOX',
   message: NonSharedBuffer
-): [string, Array<IotBoxTagVo | SotoaTagVo>, Map<string, IotBoxTagVo | SotoaTagVo>] | undefined {
+): [string, Array<TagVo>, Map<string, TagVo>] | undefined {
   const iotBoxGatewayProtocol = IotBoxGatewayProtocol.new(message.buffer)
   if (iotBoxGatewayProtocol == undefined) {
     return undefined
@@ -14,16 +17,11 @@ function process(
   const mac = parseMac(iotBoxGatewayProtocol.dev_id)
   const data_buffer = ByteBuffer.wrap(iotBoxGatewayProtocol.data)
   const count = data_buffer.readUint8()
-  const tag_list: Array<IotBoxTagVo | SotoaTagVo> = []
-  const tag_map = new Map<string, IotBoxTagVo | SotoaTagVo>()
+  const tag_list: Array<TagVo> = []
+  const tag_map = new Map<string, TagVo>()
   if (iotBoxGatewayProtocol.data.length == count * 38 + 1) {
     for (let i = 0; i < count; i++) {
-      let tag: IotBoxTagProtocol | SotoaTagProtocol | null
-      if (protocol == 'IOT_BOX') {
-        tag = IotBoxTagProtocol.getInstance(data_buffer.readBytes(38).toArrayBuffer())
-      } else {
-        tag = SotoaTagProtocol.getInstance(data_buffer.readBytes(38).toArrayBuffer())
-      }
+      const tag = TagProtocol.getInstance(data_buffer.readBytes(38).toArrayBuffer())
       if (tag != null) {
         const vo = transform(tag)
         tag_list.push(vo)

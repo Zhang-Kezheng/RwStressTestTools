@@ -1,6 +1,6 @@
 {
   "name": "rwstresstesttools",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "仁微压力测试工具",
   "main": "./out/main/index.js",
   "author": "仁微电子",
@@ -16,9 +16,13 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win ",
-    "build:mac": "npm run build && electron-builder --mac --universal",
-    "build:linux": "npm run build && electron-builder --linux"
+    "build:win:x64": "npm run build && electron-builder --win --x64",
+    "build:win:arm64": "npm run build && electron-builder --win --arm64",
+    "build:mac:universal": "npm run build && electron-builder --mac --universal",
+    "build:mac:x64": "npm run build && electron-builder --x64",
+    "build:mac:arm64": "npm run build && electron-builder --arm64",
+    "build:linux:x64": "npm run build && electron-builder --linux --x64",
+    "build:linux:arm64": "npm run build && electron-builder --linux --arm64"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
@@ -45,4 +49,3 @@
     "vue-tsc": "^3.0.7"
   }
 }
-

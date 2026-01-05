@@ -22,9 +22,15 @@ watch(
   { deep: true }
 )
 const checkUpdate = async (): Promise<void> => {
-  const result: UpdateCheckResult = await window.electron.ipcRenderer.invoke('setting:check_update')
-  if (!result.isUpdateAvailable) {
-    alert('当前版本为最新版本')
+  try {
+    const result: UpdateCheckResult =
+      await window.electron.ipcRenderer.invoke('setting:check_update')
+    if (!result.isUpdateAvailable) {
+      alert('当前版本为最新版本')
+    }
+  } catch (e) {
+    console.error(e)
+    alert('服务器出现错误，请联系管理员')
   }
 }
 </script>

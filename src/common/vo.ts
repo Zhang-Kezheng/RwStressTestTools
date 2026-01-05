@@ -1,17 +1,13 @@
-import { IotBoxTagProtocol, SotoaTagProtocol } from './protocol'
+import { IotBoxTagProtocol, SotoaTagProtocol, TagProtocol } from './protocol'
 import ByteBuffer from 'bytebuffer'
 
 export class IotBoxGatewayVo {
   mac: string
-  tags: Array<IotBoxTagVo | SotoaTagVo>
-  tagMap: Map<string, IotBoxTagVo | SotoaTagVo> = new Map<string, IotBoxTagVo | SotoaTagVo>()
+  tags: Array<TagVo>
+  tagMap: Map<string, TagVo> = new Map<string, TagVo>()
   update_time: number = Date.now()
   raw_data: Uint8Array<ArrayBuffer>
-  constructor(
-    mac: string,
-    tags: Array<IotBoxTagVo | SotoaTagVo>,
-    raw_data: Uint8Array<ArrayBuffer>
-  ) {
+  constructor(mac: string, tags: Array<TagVo>, raw_data: Uint8Array<ArrayBuffer>) {
     this.mac = mac
     this.tags = tags
     this.tags.forEach((value) => {
@@ -36,14 +32,14 @@ export class IotBoxMiddlewareGatewayVo {
   total: number
   packet_receive_rate: number
   last_packet_receive_rate: number = 0
-  tag_map: Map<string, IotBoxTagVo | SotoaTagVo>
-  tag_list: Array<IotBoxTagVo | SotoaTagVo>
+  tag_map: Map<string, TagVo>
+  tag_list: Array<TagVo>
   constructor(
     mac: string,
     total: number,
     packet_receive_rate: number,
-    tag_map: Map<string, IotBoxTagVo | SotoaTagVo>,
-    tag_list: Array<IotBoxTagVo | SotoaTagVo>
+    tag_map: Map<string, TagVo>,
+    tag_list: Array<TagVo>
   ) {
     this.mac = mac
     this.total = total
@@ -53,142 +49,15 @@ export class IotBoxMiddlewareGatewayVo {
   }
 }
 
-export class IotBoxTagVo {
+export class TagVo {
   mac: string
+  firmware?: number
+  hardware?: number
   voltage?: number
+  body_temperature?: number
   tamper?: boolean
   button?: boolean
   shock?: boolean
-  heart_rate?: number
-  blood_pressure_h?: number
-  blood_pressure_l?: number
-  blood_oxygen?: number
-  body_temperature?: number
-  step_count?: number
-  sleep_state?: number
-  deep_sleep_time?: number
-  light_sleep_time?: number
-  rssi?: number
-  last_time: number = Date.now()
-  first_time?: number
-  packet_count: number = 1
-  raw_data: string
-  constructor(mac: string, raw_data: string) {
-    this.mac = mac
-    this.raw_data = raw_data
-  }
-}
-
-export function transform(
-  tag_protocol: IotBoxTagProtocol | SotoaTagProtocol
-): IotBoxTagVo | SotoaTagVo {
-  if (tag_protocol instanceof IotBoxTagProtocol) {
-    const iotBoxTagVo = new IotBoxTagVo(
-      parseMac(tag_protocol.mac),
-      toHexString(tag_protocol.toBytes())
-    )
-    const bytebuffer = ByteBuffer.wrap(tag_protocol.userData)
-    iotBoxTagVo.rssi = tag_protocol.rssi
-    switch (tag_protocol.command) {
-      case 0x09:
-        iotBoxTagVo.voltage = Number(((tag_protocol.userData[2] * 6.6) / 255).toFixed(2))
-        iotBoxTagVo.tamper = ((tag_protocol.userData[0] >> 5) & 0x01) == 1
-        iotBoxTagVo.button = ((tag_protocol.userData[0] >> 4) & 0x01) == 1
-        iotBoxTagVo.shock = ((tag_protocol.userData[0] >> 3) & 0x01) == 1
-        break
-      case 0x0a:
-        iotBoxTagVo.heart_rate = tag_protocol.userData[0]
-        iotBoxTagVo.blood_pressure_h = tag_protocol.userData[1]
-        iotBoxTagVo.blood_pressure_l = tag_protocol.userData[2]
-        break
-      case 0x0b:
-        iotBoxTagVo.blood_oxygen = tag_protocol.userData[0]
-        break
-      case 0x0c:
-        iotBoxTagVo.body_temperature = bytebuffer.readByte()
-        iotBoxTagVo.step_count = bytebuffer.readUint16()
-        break
-      case 0x0d:
-        iotBoxTagVo.sleep_state = tag_protocol.userData[0]
-        iotBoxTagVo.light_sleep_time = tag_protocol.userData[1]
-        iotBoxTagVo.deep_sleep_time = tag_protocol.userData[2]
-        break
-      default:
-        break
-    }
-    return iotBoxTagVo
-  } else {
-    const bytebuffer = ByteBuffer.wrap(tag_protocol.data)
-    const mac = parseMac(tag_protocol.mac)
-    const firmware = bytebuffer.readByte()
-    const hardware = bytebuffer.readByte()
-    const voltage = bytebuffer.readByte()
-    const body_temperature = bytebuffer.readByte()
-    const status = bytebuffer.readByte()
-    const tamper = ((status >> 5) & 0x01) == 1
-    const button = ((status >> 4) & 0x01) == 1
-    const shock = ((status >> 3) & 0x01) == 1
-    const raw = toHexString(tag_protocol.toBytes())
-    if (tag_protocol.type == 0x00) {
-      bytebuffer.skip(6)
-      const sn = bytebuffer.readByte()
-      return new SotoaTagVo(
-        mac,
-        firmware,
-        hardware,
-        voltage,
-        body_temperature,
-        tamper,
-        button,
-        shock,
-        sn,
-        tag_protocol.rssi,
-        raw
-      )
-    } else {
-      const heart_rate = bytebuffer.readUint8()
-      const blood_pressure_h = bytebuffer.readUint8()
-      const blood_pressure_l = bytebuffer.readUint8()
-      const blood_oxygen = bytebuffer.readUint8()
-      const step_count = bytebuffer.readUint16()
-      const sleep_state = bytebuffer.readByte()
-      const deep_sleep_time = bytebuffer.readUint8()
-      const light_sleep_time = bytebuffer.readUint8()
-      const sn = bytebuffer.readByte()
-      const tag = new SotoaTagVo(
-        mac,
-        firmware,
-        hardware,
-        voltage,
-        body_temperature,
-        tamper,
-        button,
-        shock,
-        sn,
-        tag_protocol.rssi,
-        raw
-      )
-      tag.heart_rate = heart_rate
-      tag.blood_pressure_h = blood_pressure_h
-      tag.blood_pressure_l = blood_pressure_l
-      tag.blood_oxygen = blood_oxygen
-      tag.step_count = step_count
-      tag.sleep_state = sleep_state
-      tag.deep_sleep_time = deep_sleep_time
-      tag.light_sleep_time = light_sleep_time
-      return tag
-    }
-  }
-}
-export class SotoaTagVo {
-  mac: string
-  firmware: number
-  hardware: number
-  voltage: number
-  body_temperature: number
-  tamper: boolean
-  button: boolean
-  shock: boolean
   heart_rate?: number
   blood_pressure_h?: number
   blood_pressure_l?: number
@@ -198,36 +67,89 @@ export class SotoaTagVo {
   deep_sleep_time?: number
   light_sleep_time?: number
   rssi: number
-  sn: number
+  sn?: number
   last_time: number = Date.now()
   first_time?: number
   packet_count: number = 1
   raw_data: string
-  constructor(
-    mac: string,
-    firmware: number,
-    hardware: number,
-    voltage: number,
-    body_temperature: number,
-    tamper: boolean,
-    button: boolean,
-    shock: boolean,
-    sn: number,
-    rssi: number,
-    raw_data: string
-  ) {
+  constructor(mac: string, rssi: number, raw_data: string) {
     this.mac = mac
-    this.firmware = firmware
-    this.hardware = hardware
-    this.voltage = voltage
-    this.body_temperature = body_temperature
-    this.tamper = tamper
-    this.button = button
-    this.shock = shock
-    this.sn = sn
     this.rssi = rssi
     this.raw_data = raw_data
   }
+}
+export function transform(tag_protocol: TagProtocol): TagVo {
+  const mac = parseMac(tag_protocol.mac)
+  const tag_vo = new TagVo(mac, tag_protocol.rssi, toHexString(tag_protocol.toBytes()))
+  switch (tag_protocol.manufacturerId) {
+    case 0x0d00: {
+      const iotBoxTagProtocol = tag_protocol.tag as IotBoxTagProtocol
+      const bytebuffer = ByteBuffer.wrap(iotBoxTagProtocol.userData)
+      switch (iotBoxTagProtocol.command) {
+        case 0x09:
+          tag_vo.voltage = Number(((iotBoxTagProtocol.userData[2] * 6.6) / 255).toFixed(2))
+          tag_vo.tamper = ((iotBoxTagProtocol.userData[0] >> 5) & 0x01) == 1
+          tag_vo.button = ((iotBoxTagProtocol.userData[0] >> 4) & 0x01) == 1
+          tag_vo.shock = ((iotBoxTagProtocol.userData[0] >> 3) & 0x01) == 1
+          break
+        case 0x0a:
+          tag_vo.heart_rate = iotBoxTagProtocol.userData[0]
+          tag_vo.blood_pressure_h = iotBoxTagProtocol.userData[1]
+          tag_vo.blood_pressure_l = iotBoxTagProtocol.userData[2]
+          break
+        case 0x0b:
+          tag_vo.blood_oxygen = iotBoxTagProtocol.userData[0]
+          break
+        case 0x0c:
+          tag_vo.body_temperature = bytebuffer.readByte()
+          tag_vo.step_count = bytebuffer.readUint16()
+          break
+        case 0x0d:
+          tag_vo.sleep_state = iotBoxTagProtocol.userData[0]
+          tag_vo.light_sleep_time = iotBoxTagProtocol.userData[1]
+          tag_vo.deep_sleep_time = iotBoxTagProtocol.userData[2]
+          break
+        default:
+          break
+      }
+      break
+    }
+    case 0x0911: {
+      const sotoaTagProtocol = tag_protocol.tag as SotoaTagProtocol
+      const bytebuffer = ByteBuffer.wrap(sotoaTagProtocol.data)
+      const firmware = bytebuffer.readByte()
+      const hardware = bytebuffer.readByte()
+      const voltage = bytebuffer.readByte()
+      const body_temperature = bytebuffer.readByte()
+      const status = bytebuffer.readByte()
+      const tamper = ((status >> 5) & 0x01) == 1
+      const button = ((status >> 4) & 0x01) == 1
+      const shock = ((status >> 3) & 0x01) == 1
+      tag_vo.firmware = firmware
+      tag_vo.hardware = hardware
+      tag_vo.voltage = voltage
+      tag_vo.body_temperature = body_temperature
+      tag_vo.tamper = tamper
+      tag_vo.button = button
+      tag_vo.shock = shock
+      if (sotoaTagProtocol.type == 0x00) {
+        bytebuffer.skip(6)
+        tag_vo.sn = bytebuffer.readByte()
+      } else {
+        tag_vo.heart_rate = bytebuffer.readUint8()
+        tag_vo.blood_pressure_h = bytebuffer.readUint8()
+        tag_vo.blood_pressure_l = bytebuffer.readUint8()
+        tag_vo.blood_oxygen = bytebuffer.readUint8()
+        tag_vo.step_count = bytebuffer.readUint16()
+        tag_vo.sleep_state = bytebuffer.readByte()
+        tag_vo.deep_sleep_time = bytebuffer.readUint8()
+        tag_vo.light_sleep_time = bytebuffer.readUint8()
+        tag_vo.sn = bytebuffer.readByte()
+      }
+      break
+    }
+  }
+  return tag_vo
 }
 
 export function parseMac(dev_id: Uint8Array<ArrayBuffer>): string {

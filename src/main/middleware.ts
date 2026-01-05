@@ -2,10 +2,9 @@ import OS from 'os'
 import IpcMainInvokeEvent = Electron.IpcMainInvokeEvent
 import {
   IotBoxMiddlewareGatewayVo,
-  IotBoxTagVo,
   IotBoxMiddlewareGateway,
-  SotoaTagVo,
-  transform
+  transform,
+  TagVo
 } from '../common/vo'
 import { mergeProperties } from './gateway.ts'
 import * as fs from 'node:fs'
@@ -13,15 +12,14 @@ import path from 'path'
 import { MiddlewareOption } from '../common/dto.ts'
 export async function ips(): Promise<string[]> {
   const interfaces: NodeJS.Dict<OS.NetworkInterfaceInfo[]> = OS.networkInterfaces()
+  console.log('ips', interfaces)
   const ips = new Array<string>()
   for (const interfaceName in interfaces) {
-    if (interfaceName.includes('en') || interfaceName.includes('lo')) {
-      const ifaces = interfaces[interfaceName]!
-      for (let i = 0; i < ifaces.length; i++) {
-        const iface = ifaces[i]
-        if (iface.family === 'IPv4') {
-          ips.push(iface.address)
-        }
+    const ifaces = interfaces[interfaceName]!
+    for (let i = 0; i < ifaces.length; i++) {
+      const iface = ifaces[i]
+      if (iface.family === 'IPv4') {
+        ips.push(iface.address)
       }
     }
   }
@@ -50,10 +48,7 @@ export async function start(
     option.transport == 'UDP'
       ? new UdpServer(option.ip, option.port)
       : new TcpServer(option.ip, option.port)
-  const cache_map: Map<string, Array<IotBoxTagVo | SotoaTagVo>> = new Map<
-    string,
-    Array<IotBoxTagVo | SotoaTagVo>
-  >()
+  const cache_map: Map<string, Array<TagVo>> = new Map<string, Array<TagVo>>()
   const timer = setInterval(() => {
     gateway_list.forEach((item) => {
       item.last_packet_receive_rate = item.packet_receive_rate
@@ -78,6 +73,7 @@ export async function start(
           reject('端口被占用')
           break
         default:
+          console.error(err)
           reject('出现未知异常')
           break
       }
@@ -98,7 +94,7 @@ export async function start(
     server.message(async (message) => {
       try {
         const [mac, tag_list, tag_map] = await pool.exec('process', [option.protocol, message])
-        const tags: Array<IotBoxTagVo | SotoaTagVo> = JSON.parse(JSON.stringify(tag_list))
+        const tags: Array<TagVo> = JSON.parse(JSON.stringify(tag_list))
         if (cache_map.has(mac)) {
           cache_map.get(mac)?.push(...tags)
         } else {
@@ -108,7 +104,7 @@ export async function start(
           const gateway = gateway_map.get(mac)!
           gateway.packet_receive_rate += tag_list.length * 38
           gateway.total += tag_list.length
-          tag_list.forEach((tag: IotBoxTagVo) => {
+          tag_list.forEach((tag: TagVo) => {
             if (gateway.tag_map.has(tag.mac)) {
               const item = gateway.tag_map.get(tag.mac)!
               const packet_count = item.packet_count + 1
@@ -121,7 +117,7 @@ export async function start(
             }
           })
         } else {
-          tag_list.forEach((tag: IotBoxTagVo) => {
+          tag_list.forEach((tag: TagVo) => {
             tag.first_time = Date.now()
           })
           const gateway = new IotBoxMiddlewareGatewayVo(mac, tag_list.length, 0, tag_map, tag_list)
@@ -145,7 +141,7 @@ export async function stop(): Promise<boolean> {
 import os from 'os'
 import { Server, TcpServer, UdpServer } from './server.ts'
 import { app } from 'electron'
-import { IotBoxTagProtocol, SotoaTagProtocol } from '../common/protocol.ts'
+import { TagProtocol } from '../common/protocol.ts'
 export async function export_tag_list(
   _event: IpcMainInvokeEvent,
   option: {
@@ -190,14 +186,12 @@ export async function export_tag_list(
     const data = fs
       .readFileSync(path.join(app.getPath('userData'), 'Cache', `${mac}.cache`))
       .toString()
-    const list: Array<IotBoxTagVo | SotoaTagVo> = []
+    const list: Array<TagVo> = []
     data.split(`${os.EOL}`).forEach((item) => {
       if (item == '') return
       const data = hexStringToByteArray(item)
-      const protocol =
-        option.protocol == 'IOT_BOX'
-          ? IotBoxTagProtocol.getInstance(data.buffer)
-          : SotoaTagProtocol.getInstance(data.buffer)
+      TagProtocol.getInstance(data.buffer)
+      const protocol = TagProtocol.getInstance(data.buffer)
       if (protocol != null) {
         const vo = transform(protocol)
         list.push(vo)
@@ -243,10 +237,10 @@ function timestampToTime(timestamp: number | undefined): string {
     date.getMilliseconds() < 100 ? '0' + date.getMilliseconds() : date.getMilliseconds()
   return Y + M + D + h + m + s + milliseconds
 }
-function parseTagVo(tag: IotBoxTagVo | SotoaTagVo): string {
+function parseTagVo(tag: TagVo): string {
   return `${tag.mac},${tag.voltage ?? ''},${tag.tamper ?? ''},${tag.button ?? ''},${tag.shock ?? ''},${tag.heart_rate ?? ''},${tag.blood_pressure_l ?? ''},${tag.blood_pressure_h ?? ''},${tag.blood_oxygen ?? ''},${tag.body_temperature ?? ''},${tag.step_count ?? ''},${tag.sleep_state ?? ''},${tag.deep_sleep_time ?? ''},${tag.light_sleep_time ?? ''},${tag.rssi ?? ''},`
 }
-const diubaolv = (row: IotBoxTagVo, rate: number, runtime: number): string => {
+const diubaolv = (row: TagVo, rate: number, runtime: number): string => {
   const yingshou = (runtime * rate) / 1000
   if (yingshou === 0) {
     return '0'
@@ -269,7 +263,7 @@ export async function list(): Promise<IotBoxMiddlewareGateway[]> {
 export async function tag_list(
   _event: IpcMainInvokeEvent,
   mac: string
-): Promise<IotBoxTagVo[] | undefined> {
+): Promise<TagVo[] | undefined> {
   return gateway_map.get(mac)?.tag_list
 }
 
